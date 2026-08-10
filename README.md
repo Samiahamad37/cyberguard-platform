@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CyberGuard AI
+
+AI-powered cybersecurity platform for detecting, analyzing, and responding to cyber threats.
+
+**Location:** `D:\cyberguard-ai`
+
+## Stack
+
+- Next.js (App Router) + TypeScript + React
+- Tailwind CSS + shadcn/ui-style components
+- Framer Motion, Recharts, Zustand
+- React Hook Form + Zod
+- Axios client prepared for FastAPI
+
+## Features
+
+- Landing page (hero, features, benefits, pricing, testimonials, FAQ)
+- Auth: login, register, forgot password, 2FA UI, session store
+- Dashboard with security score, alerts, charts, threat timeline
+- Phishing detection, malware scanner, website security scanner
+- Threat intelligence, AI assistant, reports, alerts center
+- Device management and user settings
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+cd D:\cyberguard-ai
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command       | Description              |
+|---------------|--------------------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build       |
+| `npm run start` | Start production server|
+| `npm run lint`  | Run ESLint             |
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/           # App Router pages (landing, auth, dashboard)
+components/    # UI, layout, charts, shared widgets
+features/      # Feature-specific UI modules
+services/      # API service layer (mock → FastAPI-ready)
+stores/        # Zustand state
+lib/           # Utils, validations, constants, mock data
+types/         # Shared TypeScript types
+hooks/         # React hooks
+utils/         # Helper re-exports
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Integrations (prepared)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Service modules use mock JSON responses today and are structured for:
 
-## Deploy on Vercel
+- OpenAI API
+- VirusTotal API
+- AbuseIPDB API
+- URLScan.io API
+- Have I Been Pwned API
+- Shodan API
+- Google Safe Browsing API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Configure keys via `.env.local` (see `.env.example`). Point `NEXT_PUBLIC_API_BASE_URL` at your FastAPI backend when ready.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Demo notes
+
+- Auth is mocked locally via Zustand persistence
+- 2FA accepts any 6-digit code
+- Scanners return simulated AI analysis results
