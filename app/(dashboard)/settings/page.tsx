@@ -9,6 +9,7 @@ import { Copy, KeyRound, Plus, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -117,15 +118,13 @@ export default function SettingsPage() {
               >
                 <div className="space-y-2">
                   <Label>Current password</Label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     {...passwordForm.register("currentPassword")}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>New password</Label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     {...passwordForm.register("newPassword")}
                   />
                   {passwordForm.formState.errors.newPassword && (
@@ -136,8 +135,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Confirm password</Label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     {...passwordForm.register("confirmPassword")}
                   />
                 </div>
