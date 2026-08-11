@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "@/types";
+import { loginRequest, registerRequest } from "@/services/auth.service";
 
 interface AuthState {
   user: User | null;
@@ -16,14 +17,11 @@ interface AuthState {
   updateUser: (partial: Partial<User>) => void;
 }
 
-const mockUser: User = {
-  id: "usr-001",
-  name: "Alex Morgan",
-  email: "alex.morgan@cyberguard.ai",
-  role: "admin",
-  twoFactorEnabled: true,
-  createdAt: "2025-01-15T10:00:00.000Z",
-};
+function persistToken(token: string | null) {
+  if (typeof window === "undefined") return;
+  if (token) localStorage.setItem("cg_token", token);
+  else localStorage.removeItem("cg_token");
+}
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -33,47 +31,42 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
 
-      login: async (email: string, _password: string) => {
+      login: async (email, password) => {
         set({ isLoading: true });
-        await new Promise((r) => setTimeout(r, 900));
-        const token = `cg_mock_${Date.now()}`;
-        if (typeof window !== "undefined") {
-          localStorage.setItem("cg_token", token);
+        try {
+          const res = await loginRequest(email, password);
+          persistToken(res.access_token);
+          set({
+            user: res.user,
+            token: res.access_token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
         }
-        set({
-          user: { ...mockUser, email },
-          token,
-          isAuthenticated: true,
-          isLoading: false,
-        });
       },
 
-      register: async (name: string, email: string, _password: string) => {
+      register: async (name, email, password) => {
         set({ isLoading: true });
-        await new Promise((r) => setTimeout(r, 1100));
-        const token = `cg_mock_${Date.now()}`;
-        if (typeof window !== "undefined") {
-          localStorage.setItem("cg_token", token);
+        try {
+          const res = await registerRequest(name, email, password);
+          persistToken(res.access_token);
+          set({
+            user: res.user,
+            token: res.access_token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
         }
-        set({
-          user: {
-            ...mockUser,
-            id: `usr-${Date.now()}`,
-            name,
-            email,
-            twoFactorEnabled: false,
-            createdAt: new Date().toISOString(),
-          },
-          token,
-          isAuthenticated: true,
-          isLoading: false,
-        });
       },
 
       logout: () => {
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("cg_token");
-        }
+        persistToken(null);
         set({ user: null, token: null, isAuthenticated: false });
       },
 
@@ -98,6 +91,9 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.token) persistToken(state.token);
+      },
     }
   )
 );
