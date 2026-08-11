@@ -1,25 +1,22 @@
-import {
-  attackStatistics,
-  cveFeed,
-  highRiskIPs,
-  latestThreats,
-  malwareFamilies,
-  ransomwareTrends,
-} from "@/lib/mock-data/threats";
-import { sleep } from "@/lib/utils";
+import { apiClient } from "@/lib/api-client";
+import type { HighRiskIP, ThreatIntelItem } from "@/types";
 
-/**
- * Threat intelligence aggregation — mock.
- * Future: AbuseIPDB, VirusTotal, MISP, commercial TI feeds via FastAPI.
- */
-export async function fetchThreatIntelligence() {
-  await sleep(600);
-  return {
-    latestThreats,
-    malwareFamilies,
-    ransomwareTrends,
-    highRiskIPs,
-    attackStatistics,
-    cveFeed,
-  };
+export interface ThreatIntelligencePayload {
+  latestThreats: ThreatIntelItem[];
+  malwareFamilies: { name: string; activity: number; trend: string }[];
+  ransomwareTrends: { name: string; value: number }[];
+  highRiskIPs: HighRiskIP[];
+  attackStatistics: { name: string; value: number }[];
+  cveFeed: {
+    cve: string;
+    severity: string;
+    product: string;
+    description: string;
+    published: string;
+  }[];
+}
+
+export async function fetchThreatIntelligence(): Promise<ThreatIntelligencePayload> {
+  const { data } = await apiClient.get<ThreatIntelligencePayload>("/threat-intel");
+  return data;
 }
