@@ -25,9 +25,11 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ detail?: string; message?: string }>) => {
+  (error: AxiosError<{ detail?: string | { msg?: string }[]; message?: string }>) => {
+    const detail = error.response?.data?.detail;
     const message =
-      error.response?.data?.detail ||
+      (typeof detail === "string" ? detail : undefined) ||
+      (Array.isArray(detail) ? detail.map((d) => d.msg).filter(Boolean).join(", ") : undefined) ||
       error.response?.data?.message ||
       error.message ||
       "An unexpected error occurred";
