@@ -1,0 +1,10 @@
+/* Optional supplemental styles — primary theme lives in app/globals.css */
+
+.scanline {
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(34, 211, 238, 0.03) 50%
+  );
+  background-size: 100% 4px;
+}
