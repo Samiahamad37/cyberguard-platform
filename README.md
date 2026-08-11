@@ -6,36 +6,42 @@ AI-powered cybersecurity platform for detecting, analyzing, and responding to cy
 
 ## Stack
 
-- Next.js (App Router) + TypeScript + React
-- Tailwind CSS + shadcn/ui-style components
-- Framer Motion, Recharts, Zustand
-- React Hook Form + Zod
-- Axios client prepared for FastAPI
-
-## Features
-
-- Landing page (hero, features, benefits, pricing, testimonials, FAQ)
-- Auth: login, register, forgot password, 2FA UI, session store
-- Dashboard with security score, alerts, charts, threat timeline
-- Phishing detection, malware scanner, website security scanner
-- Threat intelligence, AI assistant, reports, alerts center
-- Device management and user settings
+- **Frontend:** Next.js (App Router) + TypeScript + React, Tailwind, Zustand, Axios
+- **Backend:** FastAPI + SQLAlchemy + SQLite + JWT
 
 ## Getting Started
 
+### 1. Backend
+
+```bash
+cd backend
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env
+uvicorn app.main:app --reload --port 8000
+```
+
+API docs: http://localhost:8000/docs
+
+### 2. Frontend
+
 ```bash
 cd D:\cyberguard-ai
+copy .env.example .env.local
 npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+`NEXT_PUBLIC_API_BASE_URL` defaults to `http://localhost:8000/api/v1`.
+
 ## Scripts
 
 | Command       | Description              |
 |---------------|--------------------------|
-| `npm run dev` | Start development server |
+| `npm run dev` | Start frontend           |
 | `npm run build` | Production build       |
 | `npm run start` | Start production server|
 | `npm run lint`  | Run ESLint             |
@@ -44,32 +50,22 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```
 app/           # App Router pages (landing, auth, dashboard)
+backend/       # FastAPI API (auth + scanners + threat intel)
 components/    # UI, layout, charts, shared widgets
 features/      # Feature-specific UI modules
-services/      # API service layer (mock → FastAPI-ready)
+services/      # Axios clients talking to FastAPI
 stores/        # Zustand state
-lib/           # Utils, validations, constants, mock data
+lib/           # Utils, validations, constants
 types/         # Shared TypeScript types
-hooks/         # React hooks
-utils/         # Helper re-exports
 ```
 
-## API Integrations (prepared)
+## Auth
 
-Service modules use mock JSON responses today and are structured for:
-
-- OpenAI API
-- VirusTotal API
-- AbuseIPDB API
-- URLScan.io API
-- Have I Been Pwned API
-- Shodan API
-- Google Safe Browsing API
-
-Configure keys via `.env.local` (see `.env.example`). Point `NEXT_PUBLIC_API_BASE_URL` at your FastAPI backend when ready.
+Register/login create real users in SQLite (`backend/cyberguard.db`) and return JWT tokens.
+Scanners and threat intel require `Authorization: Bearer <token>`.
 
 ## Demo notes
 
-- Auth is mocked locally via Zustand persistence
-- 2FA accepts any 6-digit code
-- Scanners return simulated AI analysis results
+- Analysis engines are heuristic (ready to plug in VirusTotal / OpenAI / etc.)
+- 2FA accepts any 6-digit code (or `123456`)
+- Forgot-password returns a safe generic message (no email send yet)
