@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,17 +8,65 @@ import { RiskBadge } from "@/components/shared/risk-badge";
 import { BarTrendChart } from "@/components/charts/bar-trend-chart";
 import { RiskPieChart } from "@/components/charts/risk-pie-chart";
 import { Progress } from "@/components/ui/progress";
+import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import {
-  attackStatistics,
-  cveFeed,
-  highRiskIPs,
-  latestThreats,
-  malwareFamilies,
-  ransomwareTrends,
-} from "@/lib/mock-data/threats";
+  fetchThreatIntelligence,
+  type ThreatIntelligencePayload,
+} from "@/services/threat-intel.service";
 import { formatRelativeTime } from "@/lib/utils";
+import type { RiskLevel } from "@/types";
 
 export default function ThreatIntelligencePage() {
+  const [data, setData] = useState<ThreatIntelligencePayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchThreatIntelligence()
+      .then((payload) => {
+        if (!cancelled) setData(payload);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message || "Failed to load threat intel");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader
+          title="Threat Intelligence"
+          description="Latest threats, malware families, ransomware trends, and CVE feed"
+        />
+        <p className="text-sm text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div>
+        <PageHeader
+          title="Threat Intelligence"
+          description="Latest threats, malware families, ransomware trends, and CVE feed"
+        />
+        <TableSkeleton rows={6} />
+      </div>
+    );
+  }
+
+  const {
+    latestThreats,
+    malwareFamilies,
+    ransomwareTrends,
+    highRiskIPs,
+    attackStatistics,
+    cveFeed,
+  } = data;
+
   return (
     <div>
       <PageHeader
@@ -141,7 +190,7 @@ export default function ThreatIntelligencePage() {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-sm">{cve.cve}</span>
-                  <RiskBadge level={cve.severity} />
+                  <RiskBadge level={cve.severity as RiskLevel} />
                 </div>
                 <p className="mt-1 text-sm font-medium">{cve.product}</p>
                 <p className="mt-1 text-xs text-muted-foreground">

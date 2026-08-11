@@ -30,6 +30,13 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      acceptTerms: false,
+    },
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -37,8 +44,12 @@ export default function RegisterPage() {
       await registerUser(data.name, data.email, data.password);
       toast.success("Account created successfully!");
       router.push("/dashboard");
-    } catch {
-      toast.error("Registration failed. Please try again.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Registration failed. Please try again."
+      );
     }
   };
 
@@ -79,6 +90,10 @@ export default function RegisterPage() {
               {...register("password")}
               autoComplete="new-password"
             />
+            <p className="text-xs text-muted-foreground">
+              At least 8 characters, including one uppercase letter and one
+              number
+            </p>
             {errors.password && (
               <p className="text-xs text-red-400">{errors.password.message}</p>
             )}
@@ -89,7 +104,7 @@ export default function RegisterPage() {
               id="confirmPassword"
               type="password"
               {...register("confirmPassword")}
-              autoComplete="new-password"
+              autoComplete="off"
             />
             {errors.confirmPassword && (
               <p className="text-xs text-red-400">

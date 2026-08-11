@@ -38,8 +38,10 @@ export default function LoginPage() {
       await login(data.email, data.password);
       toast.success("Welcome back! Complete 2FA to continue.");
       router.push("/two-factor");
-    } catch {
-      toast.error("Login failed. Please try again.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Login failed. Please try again."
+      );
     }
   };
 
