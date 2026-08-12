@@ -1,4 +1,6 @@
 import { LandingNavbar } from "@/components/layout/navbar";
+import { FloatingTechIcons } from "@/components/shared/floating-tech-icons";
+import { SiteBackground } from "@/components/shared/site-background";
 import { HeroSection } from "@/features/landing/hero";
 import {
   BenefitsSection,
@@ -11,9 +13,11 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="relative min-h-screen overflow-x-hidden text-white">
+      <SiteBackground className="fixed inset-0" />
+      <FloatingTechIcons className="fixed inset-0" />
       <LandingNavbar />
-      <main>
+      <main className="relative z-10">
         <HeroSection />
         <FeaturesSection />
         <BenefitsSection />
