@@ -94,10 +94,10 @@ export function FeaturesSection() {
     <section id="features" className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto mb-14 max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="text-shadow-strong text-3xl font-bold text-white sm:text-4xl">
             Security tools powered by AI
           </h2>
-          <p className="mt-3 text-slate-400">
+          <p className="mt-3 text-base text-slate-200/90">
             Everything you need to detect, analyze, and respond to cyber threats.
           </p>
         </div>
@@ -110,15 +110,17 @@ export function FeaturesSection() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
             >
-              <Card className="h-full border-white/10 bg-slate-900/60">
+              <Card className="surface-panel h-full border-0">
                 <CardHeader>
-                  <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/20">
-                    <feature.icon className="h-5 w-5 text-cyan-400" />
+                  <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/15">
+                    <feature.icon className="h-5 w-5 text-cyan-300" />
                   </div>
                   <CardTitle className="text-white">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-slate-400">{feature.description}</p>
+                  <p className="text-sm leading-relaxed text-slate-300">
+                    {feature.description}
+                  </p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -134,38 +136,38 @@ export function BenefitsSection() {
     <section id="benefits" className="px-4 py-24 sm:px-6">
       <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2">
         <div>
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="text-shadow-strong text-3xl font-bold text-white sm:text-4xl">
             Why teams choose CyberGuard AI
           </h2>
-          <p className="mt-3 text-slate-400">
+          <p className="mt-3 text-slate-200/90">
             Modern SaaS experience with SOC-ready workflows and API-ready
             architecture for future integrations.
           </p>
           <div className="mt-8 space-y-6">
             {benefits.map((b) => (
               <div key={b.title} className="flex gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/20">
-                  <b.icon className="h-5 w-5 text-violet-300" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-500/20">
+                  <b.icon className="h-5 w-5 text-sky-300" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{b.title}</h3>
-                  <p className="mt-1 text-sm text-slate-400">{b.text}</p>
+                  <p className="mt-1 text-sm text-slate-300">{b.text}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-blue-600/20 via-slate-900 to-violet-600/20 p-8">
+        <div className="surface-panel rounded-2xl p-8">
           <ul className="space-y-4">
             {[
               "Dark-mode enterprise dashboard",
-              "Mock-ready API service layer",
-              "Threat intelligence & CVE placeholders",
-              "Session & 2FA authentication UI",
+              "Real FastAPI backend with JWT auth",
+              "Threat intelligence & CVE feed",
+              "Session & 2FA authentication",
               "Exportable security reports",
             ].map((item) => (
-              <li key={item} className="flex items-center gap-3 text-slate-200">
-                <Check className="h-5 w-5 text-cyan-400" />
+              <li key={item} className="flex items-center gap-3 text-slate-100">
+                <Check className="h-5 w-5 text-cyan-300" />
                 {item}
               </li>
             ))}
@@ -181,10 +183,10 @@ export function PricingSection() {
     <section id="pricing" className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto mb-14 max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="text-shadow-strong text-3xl font-bold text-white sm:text-4xl">
             Simple, transparent pricing
           </h2>
-          <p className="mt-3 text-slate-400">
+          <p className="mt-3 text-slate-200/90">
             Start free. Upgrade when your security needs grow.
           </p>
         </div>
@@ -193,19 +195,19 @@ export function PricingSection() {
             <Card
               key={plan.name}
               className={cn(
-                "border-white/10 bg-slate-900/60",
+                "surface-panel border-0",
                 plan.highlighted &&
-                  "border-cyan-500/40 shadow-[0_0_40px_rgba(34,211,238,0.15)]"
+                  "ring-1 ring-cyan-400/50 shadow-[0_0_40px_rgba(34,211,238,0.18)]"
               )}
             >
               <CardHeader>
                 <CardTitle className="text-white">{plan.name}</CardTitle>
-                <p className="text-sm text-slate-400">{plan.description}</p>
+                <p className="text-sm text-slate-300">{plan.description}</p>
                 <div className="pt-4">
                   <span className="text-4xl font-bold text-white">
                     ${plan.price}
                   </span>
-                  <span className="text-slate-400">/mo</span>
+                  <span className="text-slate-300">/mo</span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -213,9 +215,9 @@ export function PricingSection() {
                   {plan.features.map((f) => (
                     <li
                       key={f}
-                      className="flex items-start gap-2 text-sm text-slate-300"
+                      className="flex items-start gap-2 text-sm text-slate-200"
                     >
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
                       {f}
                     </li>
                   ))}
@@ -240,17 +242,19 @@ export function TestimonialsSection() {
   return (
     <section className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-12 text-center text-3xl font-bold text-white sm:text-4xl">
+        <h2 className="text-shadow-strong mb-12 text-center text-3xl font-bold text-white sm:text-4xl">
           Trusted by security teams
         </h2>
         <div className="grid gap-6 md:grid-cols-3">
           {testimonials.map((t) => (
-            <Card key={t.author} className="border-white/10 bg-slate-900/60">
+            <Card key={t.author} className="surface-panel border-0">
               <CardContent className="pt-6">
-                <p className="text-slate-300">&ldquo;{t.quote}&rdquo;</p>
+                <p className="leading-relaxed text-slate-200">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
                 <div className="mt-6">
                   <p className="font-medium text-white">{t.author}</p>
-                  <p className="text-sm text-slate-400">{t.role}</p>
+                  <p className="text-sm text-slate-300">{t.role}</p>
                 </div>
               </CardContent>
             </Card>
@@ -265,21 +269,27 @@ export function FAQSection() {
   return (
     <section id="faq" className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-3xl">
-        <h2 className="mb-10 text-center text-3xl font-bold text-white sm:text-4xl">
+        <h2 className="text-shadow-strong mb-10 text-center text-3xl font-bold text-white sm:text-4xl">
           Frequently asked questions
         </h2>
-        <Accordion type="single" collapsible className="w-full">
-          {FAQ_ITEMS.map((item, i) => (
-            <AccordionItem key={i} value={`item-${i}`} className="border-white/10">
-              <AccordionTrigger className="text-white">
-                {item.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-slate-400">
-                {item.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <div className="surface-panel rounded-2xl px-4 sm:px-6">
+          <Accordion type="single" collapsible className="w-full">
+            {FAQ_ITEMS.map((item, i) => (
+              <AccordionItem
+                key={i}
+                value={`item-${i}`}
+                className="border-white/10"
+              >
+                <AccordionTrigger className="text-left text-white hover:text-cyan-200">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-slate-300">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
     </section>
   );
@@ -287,25 +297,25 @@ export function FAQSection() {
 
 export function FooterSection() {
   return (
-    <footer className="border-t border-white/10 px-4 py-12 sm:px-6">
+    <footer className="relative z-10 border-t border-white/10 bg-slate-950/50 px-4 py-12 backdrop-blur-md sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
         <div>
           <p className="font-bold text-white">{APP_NAME}</p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-300">
             © {new Date().getFullYear()} CyberGuard AI. All rights reserved.
           </p>
         </div>
-        <div className="flex gap-6 text-sm text-slate-400">
-          <Link href="/login" className="hover:text-white">
+        <div className="flex gap-6 text-sm text-slate-200">
+          <Link href="/login" className="hover:text-cyan-300">
             Login
           </Link>
-          <Link href="/register" className="hover:text-white">
+          <Link href="/register" className="hover:text-cyan-300">
             Register
           </Link>
-          <a href="#features" className="hover:text-white">
+          <a href="#features" className="hover:text-cyan-300">
             Features
           </a>
-          <a href="#pricing" className="hover:text-white">
+          <a href="#pricing" className="hover:text-cyan-300">
             Pricing
           </a>
         </div>
