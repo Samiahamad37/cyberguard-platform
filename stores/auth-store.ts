@@ -10,6 +10,8 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasHydrated: boolean;
+  setHasHydrated: (value: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -30,6 +32,9 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      hasHydrated: false,
+
+      setHasHydrated: (value) => set({ hasHydrated: value }),
 
       login: async (email, password) => {
         set({ isLoading: true });
@@ -51,12 +56,12 @@ export const useAuthStore = create<AuthState>()(
       register: async (name, email, password) => {
         set({ isLoading: true });
         try {
-          const res = await registerRequest(name, email, password);
-          persistToken(res.access_token);
+          await registerRequest(name, email, password);
+          persistToken(null);
           set({
-            user: res.user,
-            token: res.access_token,
-            isAuthenticated: true,
+            user: null,
+            token: null,
+            isAuthenticated: false,
             isLoading: false,
           });
         } catch (error) {
@@ -91,9 +96,23 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.token) persistToken(state.token);
+      onRehydrateStorage: () => (state, error) => {
+        if (!error && state?.token) {
+          persistToken(state.token);
+        }
+        useAuthStore.setState({ hasHydrated: true });
       },
     }
   )
 );
+
+// Ensure hydration flag is set even if rehydrate callback is missed
+if (typeof window !== "undefined") {
+  const markHydrated = () => useAuthStore.setState({ hasHydrated: true });
+
+  if (useAuthStore.persist.hasHydrated()) {
+    markHydrated();
+  } else {
+    useAuthStore.persist.onFinishHydration(markHydrated);
+  }
+}
