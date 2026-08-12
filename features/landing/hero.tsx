@@ -9,17 +9,12 @@ import { APP_TAGLINE } from "@/lib/constants";
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden px-4 pb-24 pt-32 sm:px-6 lg:pt-40">
-      <div className="cyber-grid absolute inset-0 opacity-40" />
-      <div className="pointer-events-none absolute -left-32 top-20 h-96 w-96 rounded-full bg-blue-600/30 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 top-40 h-80 w-80 rounded-full bg-violet-600/25 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl" />
-
       <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2">
         <div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-500/15 px-3 py-1 text-xs font-medium text-cyan-200 backdrop-blur-md"
           >
             <Zap className="h-3.5 w-3.5" />
             AI-Powered Threat Defense
@@ -28,11 +23,11 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl"
+            className="text-shadow-strong text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl"
           >
             <span className="gradient-text">CyberGuard AI</span>
             <br />
-            <span className="mt-2 block text-3xl sm:text-4xl lg:text-5xl">
+            <span className="mt-2 block text-3xl text-white sm:text-4xl lg:text-5xl">
               {APP_TAGLINE}
             </span>
           </motion.h1>
@@ -40,7 +35,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mt-6 max-w-xl text-lg text-slate-300"
+            className="text-shadow-strong mt-6 max-w-xl text-lg leading-relaxed text-slate-100"
           >
             Detect phishing, scan malware, monitor threats, and get AI-driven
             security recommendations — built for individuals and enterprise teams.
@@ -56,8 +51,13 @@ export function HeroSection() {
                 Start Free Trial <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
-              <Link href="/dashboard">View Dashboard</Link>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="border-white/30 bg-slate-950/40 text-white backdrop-blur-md hover:bg-white/10"
+            >
+              <Link href="/login">Sign in</Link>
             </Button>
           </motion.div>
         </div>
@@ -68,30 +68,30 @@ export function HeroSection() {
           transition={{ delay: 0.25, duration: 0.6 }}
           className="relative"
         >
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-xl">
+          <div className="surface-panel relative overflow-hidden rounded-2xl p-6">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-cyan-400" />
-                <span className="text-sm font-medium text-white">
+                <Shield className="h-5 w-5 text-cyan-300" />
+                <span className="text-sm font-semibold text-white">
                   Live Threat Monitor
                 </span>
               </div>
-              <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-300">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
                 Active
               </span>
             </div>
             <div className="space-y-3">
               {[
-                { label: "Phishing blocked", value: "847", color: "text-cyan-400" },
-                { label: "Malware quarantined", value: "126", color: "text-violet-400" },
-                { label: "Security score", value: "78/100", color: "text-blue-400" },
+                { label: "Phishing blocked", value: "847", color: "text-cyan-300" },
+                { label: "Malware quarantined", value: "126", color: "text-sky-300" },
+                { label: "Security score", value: "78/100", color: "text-blue-300" },
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 px-4 py-3"
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3"
                 >
-                  <span className="text-sm text-slate-300">{item.label}</span>
+                  <span className="text-sm text-slate-200">{item.label}</span>
                   <span className={`font-semibold ${item.color}`}>{item.value}</span>
                 </div>
               ))}
@@ -102,9 +102,9 @@ export function HeroSection() {
                   key={i}
                   animate={{ y: [0, -6, 0] }}
                   transition={{ repeat: Infinity, duration: 3, delay: i * 0.4 }}
-                  className="flex h-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600/30 to-cyan-500/20"
+                  className="flex h-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/35 to-cyan-400/25"
                 >
-                  <Icon className="h-6 w-6 text-cyan-300" />
+                  <Icon className="h-6 w-6 text-cyan-200" />
                 </motion.div>
               ))}
             </div>
