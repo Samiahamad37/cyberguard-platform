@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -19,10 +19,14 @@ import {
 import { twoFactorSchema, type TwoFactorFormValues } from "@/lib/validations";
 import { verifyTwoFactorCode } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth-store";
+import { RequireAuth } from "@/components/shared/require-auth";
+import { Suspense } from "react";
 
-export default function TwoFactorPage() {
+function TwoFactorForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setTwoFactorVerified = useAuthStore((s) => s.setTwoFactorVerified);
+  const nextPath = searchParams.get("next") || "/dashboard";
 
   const {
     register,
@@ -37,7 +41,7 @@ export default function TwoFactorPage() {
     if (res.success) {
       setTwoFactorVerified();
       toast.success(res.message);
-      router.push("/dashboard");
+      router.push(nextPath.startsWith("/") ? nextPath : "/dashboard");
     } else {
       toast.error(res.message);
     }
@@ -87,5 +91,21 @@ export default function TwoFactorPage() {
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+export default function TwoFactorPage() {
+  return (
+    <RequireAuth>
+      <Suspense
+        fallback={
+          <div className="text-center text-sm text-muted-foreground">
+            Loading...
+          </div>
+        }
+      >
+        <TwoFactorForm />
+      </Suspense>
+    </RequireAuth>
   );
 }

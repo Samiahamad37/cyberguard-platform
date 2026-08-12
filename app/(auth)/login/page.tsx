@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -20,10 +21,12 @@ import {
 import { loginSchema, type LoginFormValues } from "@/lib/validations";
 import { useAuthStore } from "@/stores/auth-store";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const login = useAuthStore((s) => s.login);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const nextPath = searchParams.get("next") || "/dashboard";
 
   const {
     register,
@@ -38,7 +41,7 @@ export default function LoginPage() {
     try {
       await login(data.email, data.password);
       toast.success("Welcome back! Complete 2FA to continue.");
-      router.push("/two-factor");
+      router.push(`/two-factor?next=${encodeURIComponent(nextPath)}`);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Login failed. Please try again."
@@ -110,5 +113,17 @@ export default function LoginPage() {
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-center text-sm text-muted-foreground">Loading...</div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
