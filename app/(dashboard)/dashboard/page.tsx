@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { SecurityScoreGauge } from "@/components/dashboard/security-score-gauge";
@@ -8,16 +9,54 @@ import { ThreatTimeline } from "@/components/dashboard/threat-timeline";
 import { ActivityChart } from "@/components/charts/activity-chart";
 import { RiskPieChart } from "@/components/charts/risk-pie-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import {
-  activityChartData,
-  dashboardMetrics,
-  recentAlerts,
-  riskDistribution,
-  securityScore,
-  threatTimeline,
-} from "@/lib/mock-data/dashboard";
+  fetchDashboard,
+  type DashboardOverview,
+} from "@/services/platform.service";
 
 export default function DashboardPage() {
+  const [data, setData] = useState<DashboardOverview | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchDashboard()
+      .then((payload) => {
+        if (!cancelled) setData(payload);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message || "Failed to load dashboard");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader
+          title="Security Overview"
+          description="Real-time posture across devices, threats, and alerts"
+        />
+        <p className="text-sm text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div>
+        <PageHeader
+          title="Security Overview"
+          description="Real-time posture across devices, threats, and alerts"
+        />
+        <TableSkeleton rows={6} />
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -26,7 +65,7 @@ export default function DashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {dashboardMetrics.map((metric, i) => (
+        {data.metrics.map((metric, i) => (
           <MetricCard key={metric.label} metric={metric} index={i} />
         ))}
       </div>
@@ -37,7 +76,7 @@ export default function DashboardPage() {
             <CardTitle>Security Score</CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center py-4">
-            <SecurityScoreGauge score={securityScore} />
+            <SecurityScoreGauge score={data.securityScore} />
           </CardContent>
         </Card>
 
@@ -46,7 +85,7 @@ export default function DashboardPage() {
             <CardTitle>Security Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <ActivityChart data={activityChartData} />
+            <ActivityChart data={data.activity} />
           </CardContent>
         </Card>
       </div>
@@ -57,7 +96,7 @@ export default function DashboardPage() {
             <CardTitle>Risk Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <RiskPieChart data={riskDistribution} />
+            <RiskPieChart data={data.riskDistribution} />
           </CardContent>
         </Card>
 
@@ -66,7 +105,7 @@ export default function DashboardPage() {
             <CardTitle>Recent Alerts</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentAlerts.slice(0, 4).map((alert) => (
+            {data.recentAlerts.map((alert) => (
               <AlertCard key={alert.id} alert={alert} />
             ))}
           </CardContent>
@@ -77,7 +116,7 @@ export default function DashboardPage() {
             <CardTitle>Threat Timeline</CardTitle>
           </CardHeader>
           <CardContent>
-            <ThreatTimeline events={threatTimeline} />
+            <ThreatTimeline events={data.timeline} />
           </CardContent>
         </Card>
       </div>

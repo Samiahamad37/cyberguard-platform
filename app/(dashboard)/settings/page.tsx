@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -22,7 +22,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { maskApiKey, formatDate } from "@/lib/utils";
 import { z } from "zod";
-import { mockDevices } from "@/lib/mock-data/dashboard";
+import { fetchDevices } from "@/services/platform.service";
+import type { Device } from "@/types";
 
 type ProfileValues = z.infer<typeof profileSchema>;
 type PasswordValues = z.infer<typeof passwordChangeSchema>;
@@ -41,6 +42,13 @@ export default function SettingsPage() {
   } = useSettingsStore();
   const { theme, setTheme } = useTheme();
   const [newKeyName, setNewKeyName] = useState("");
+  const [devices, setDevices] = useState<Device[]>([]);
+
+  useEffect(() => {
+    fetchDevices()
+      .then(setDevices)
+      .catch(() => setDevices([]));
+  }, []);
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -270,7 +278,7 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockDevices.slice(0, 4).map((d) => (
+              {devices.slice(0, 4).map((d) => (
                 <div
                   key={d.id}
                   className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm"
@@ -286,6 +294,9 @@ export default function SettingsPage() {
                   </span>
                 </div>
               ))}
+              {devices.length === 0 && (
+                <p className="text-sm text-muted-foreground">No devices found.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

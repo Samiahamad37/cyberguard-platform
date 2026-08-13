@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Download, FileText } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -8,13 +9,61 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SecurityScoreGauge } from "@/components/dashboard/security-score-gauge";
 import { RiskPieChart } from "@/components/charts/risk-pie-chart";
 import { ActivityChart } from "@/components/charts/activity-chart";
-import { mockReport } from "@/lib/mock-data/threats";
-import { activityChartData, riskDistribution } from "@/lib/mock-data/dashboard";
+import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { formatDate } from "@/lib/utils";
 import { RiskBadge } from "@/components/shared/risk-badge";
-import type { RiskLevel } from "@/types";
+import type { ChartDataPoint, RiskLevel, SecurityReport } from "@/types";
+import { fetchReport } from "@/services/platform.service";
 
 export default function ReportsPage() {
+  const [report, setReport] = useState<SecurityReport | null>(null);
+  const [activity, setActivity] = useState<ChartDataPoint[]>([]);
+  const [riskDistribution, setRiskDistribution] = useState<ChartDataPoint[]>(
+    []
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchReport()
+      .then((data) => {
+        if (cancelled) return;
+        setReport(data.report);
+        setActivity(data.activity);
+        setRiskDistribution(data.riskDistribution);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message || "Failed to load report");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader
+          title="Security Reports"
+          description="Executive summary of posture, threats, and recommendations"
+        />
+        <p className="text-sm text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div>
+        <PageHeader
+          title="Security Reports"
+          description="Executive summary of posture, threats, and recommendations"
+        />
+        <TableSkeleton rows={6} />
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -24,7 +73,7 @@ export default function ReportsPage() {
           <Button
             variant="gradient"
             onClick={() =>
-              toast.info("PDF export coming soon — FastAPI endpoint placeholder")
+              toast.success("Report data loaded from API — PDF export coming soon")
             }
           >
             <Download className="h-4 w-4" />
@@ -40,13 +89,13 @@ export default function ReportsPage() {
               <FileText className="h-6 w-6 text-cyan-400" />
             </div>
             <div>
-              <h3 className="font-semibold">{mockReport.title}</h3>
+              <h3 className="font-semibold">{report.title}</h3>
               <p className="text-sm text-muted-foreground">
-                Generated {formatDate(mockReport.generatedAt)}
+                Generated {formatDate(report.generatedAt)}
               </p>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">Report ID: {mockReport.id}</p>
+          <p className="text-sm text-muted-foreground">Report ID: {report.id}</p>
         </CardContent>
       </Card>
 
@@ -56,7 +105,7 @@ export default function ReportsPage() {
             <CardTitle>Overall Security Score</CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <SecurityScoreGauge score={mockReport.overallScore} />
+            <SecurityScoreGauge score={report.overallScore} />
           </CardContent>
         </Card>
 
@@ -66,10 +115,10 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              {mockReport.threatSummary}
+              {report.threatSummary}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              {(Object.entries(mockReport.alertsCount) as [RiskLevel, number][])
+              {(Object.entries(report.alertsCount) as [RiskLevel, number][])
                 .filter(([, count]) => count > 0)
                 .map(([level, count]) => (
                   <div
@@ -92,7 +141,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              {mockReport.riskAnalysis}
+              {report.riskAnalysis}
             </p>
             <div className="mt-6">
               <RiskPieChart data={riskDistribution} />
@@ -105,7 +154,7 @@ export default function ReportsPage() {
             <CardTitle>Activity Charts</CardTitle>
           </CardHeader>
           <CardContent>
-            <ActivityChart data={activityChartData} />
+            <ActivityChart data={activity} />
           </CardContent>
         </Card>
       </div>
@@ -116,7 +165,7 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           <ol className="space-y-3">
-            {mockReport.recommendations.map((rec, i) => (
+            {report.recommendations.map((rec, i) => (
               <li
                 key={rec}
                 className="flex gap-3 rounded-lg border border-border bg-muted/20 p-4 text-sm"

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { SearchBar } from "@/components/shared/search-bar";
 import { AlertCard } from "@/components/dashboard/alert-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -13,19 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { allAlerts } from "@/lib/mock-data/threats";
-import type { RiskLevel } from "@/types";
+import type { Alert, AlertStatus, RiskLevel } from "@/types";
 import { BellOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { Alert } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { RiskBadge } from "@/components/shared/risk-badge";
+import { fetchAlerts, updateAlert } from "@/services/platform.service";
+import { toast } from "sonner";
 
 const RISK_FILTERS: Array<RiskLevel | "all"> = [
   "all",
@@ -36,13 +38,33 @@ const RISK_FILTERS: Array<RiskLevel | "all"> = [
 ];
 
 export default function AlertsPage() {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [risk, setRisk] = useState<RiskLevel | "all">("all");
   const [status, setStatus] = useState<string>("all");
   const [selected, setSelected] = useState<Alert | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetchAlerts()
+      .then((data) => {
+        if (!cancelled) setAlerts(data);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message || "Failed to load alerts");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const filtered = useMemo(() => {
-    return allAlerts.filter((a) => {
+    return alerts.filter((a) => {
       const matchesQuery =
         !query ||
         a.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -52,16 +74,51 @@ export default function AlertsPage() {
       const matchesStatus = status === "all" || a.status === status;
       return matchesQuery && matchesRisk && matchesStatus;
     });
-  }, [query, risk, status]);
+  }, [alerts, query, risk, status]);
 
   const counts = useMemo(() => {
     return {
-      critical: allAlerts.filter((a) => a.riskLevel === "critical").length,
-      high: allAlerts.filter((a) => a.riskLevel === "high").length,
-      medium: allAlerts.filter((a) => a.riskLevel === "medium").length,
-      low: allAlerts.filter((a) => a.riskLevel === "low").length,
+      critical: alerts.filter((a) => a.riskLevel === "critical").length,
+      high: alerts.filter((a) => a.riskLevel === "high").length,
+      medium: alerts.filter((a) => a.riskLevel === "medium").length,
+      low: alerts.filter((a) => a.riskLevel === "low").length,
     };
-  }, []);
+  }, [alerts]);
+
+  const setStatusFor = async (id: string, next: AlertStatus) => {
+    try {
+      const updated = await updateAlert(id, next);
+      setAlerts((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      setSelected(updated);
+      toast.success(`Alert marked ${next}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Update failed");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <PageHeader
+          title="Alerts Center"
+          description="Filter, search, and triage security alerts by severity"
+        />
+        <TableSkeleton rows={6} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader
+          title="Alerts Center"
+          description="Filter, search, and triage security alerts by severity"
+        />
+        <p className="text-sm text-red-400">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -182,6 +239,29 @@ export default function AlertsPage() {
                   Detected {formatDate(selected.timestamp)}
                 </p>
               </div>
+              <DialogFooter className="flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setStatusFor(selected.id, "acknowledged")}
+                >
+                  Acknowledge
+                </Button>
+                <Button
+                  size="sm"
+                  variant="cyan"
+                  onClick={() => setStatusFor(selected.id, "resolved")}
+                >
+                  Resolve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setStatusFor(selected.id, "dismissed")}
+                >
+                  Dismiss
+                </Button>
+              </DialogFooter>
             </>
           )}
         </DialogContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Laptop,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { RiskBadge } from "@/components/shared/risk-badge";
+import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,9 +26,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { mockDevices } from "@/lib/mock-data/dashboard";
 import type { Device } from "@/types";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
+import {
+  deleteDevice,
+  fetchDevices,
+  scanDevice,
+} from "@/services/platform.service";
 
 const typeIcon = {
   desktop: Monitor,
@@ -38,43 +43,82 @@ const typeIcon = {
 };
 
 export default function DevicesPage() {
-  const [devices, setDevices] = useState<Device[]>(mockDevices);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Device | null>(null);
+  const [scanningId, setScanningId] = useState<string | null>(null);
 
-  const runScan = (id: string) => {
+  useEffect(() => {
+    let cancelled = false;
+    fetchDevices()
+      .then((data) => {
+        if (!cancelled) setDevices(data);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message || "Failed to load devices");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const runScan = async (id: string) => {
+    setScanningId(id);
     setDevices((prev) =>
-      prev.map((d) =>
-        d.id === id
-          ? {
-              ...d,
-              status: "scanning",
-              lastScan: new Date().toISOString(),
-            }
-          : d
-      )
+      prev.map((d) => (d.id === id ? { ...d, status: "scanning" } : d))
     );
-    toast.success("Device scan started");
-    setTimeout(() => {
-      setDevices((prev) =>
-        prev.map((d) =>
-          d.id === id
-            ? {
-                ...d,
-                status: d.riskLevel === "critical" ? "at_risk" : "online",
-                lastScan: new Date().toISOString(),
-              }
-            : d
-        )
-      );
+    try {
+      const updated = await scanDevice(id);
+      setDevices((prev) => prev.map((d) => (d.id === id ? updated : d)));
+      if (selected?.id === id) setSelected(updated);
       toast.success("Scan completed");
-    }, 2000);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Scan failed");
+      const refreshed = await fetchDevices().catch(() => null);
+      if (refreshed) setDevices(refreshed);
+    } finally {
+      setScanningId(null);
+    }
   };
 
-  const removeDevice = (id: string) => {
-    setDevices((prev) => prev.filter((d) => d.id !== id));
-    setSelected(null);
-    toast.success("Device removed");
+  const removeDevice = async (id: string) => {
+    try {
+      await deleteDevice(id);
+      setDevices((prev) => prev.filter((d) => d.id !== id));
+      setSelected(null);
+      toast.success("Device removed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Remove failed");
+    }
   };
+
+  if (loading) {
+    return (
+      <div>
+        <PageHeader
+          title="Device Management"
+          description="Monitor connected devices, risk levels, and scan status"
+        />
+        <TableSkeleton rows={5} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader
+          title="Device Management"
+          description="Monitor connected devices, risk levels, and scan status"
+        />
+        <p className="text-sm text-red-400">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -86,6 +130,8 @@ export default function DevicesPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {devices.map((device) => {
           const Icon = typeIcon[device.type];
+          const isScanning =
+            scanningId === device.id || device.status === "scanning";
           return (
             <Card key={device.id} className="overflow-hidden">
               <CardContent className="p-5">
@@ -127,10 +173,10 @@ export default function DevicesPage() {
                     variant="cyan"
                     className="flex-1"
                     onClick={() => runScan(device.id)}
-                    disabled={device.status === "scanning"}
+                    disabled={isScanning}
                   >
                     <ScanSearch className="h-4 w-4" />
-                    {device.status === "scanning" ? "Scanning..." : "Run Scan"}
+                    {isScanning ? "Scanning..." : "Run Scan"}
                   </Button>
                   <Button
                     size="sm"
