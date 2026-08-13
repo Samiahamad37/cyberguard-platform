@@ -47,3 +47,6 @@ backend/*.db
 backend/**/__pycache__/
 backend/**/*.pyc
 .env.local
+
+# Local Next.js API user store
+/data/

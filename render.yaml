@@ -1,0 +1,20 @@
+# Web service for Render.com (FastAPI backend)
+# https://dashboard.render.com → New → Web Service → Connect this repo, root: backend
+
+services:
+  - type: web
+    name: cyberguard-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "480"
+      - key: DATABASE_URL
+        value: sqlite:///./cyberguard.db
+      - key: CORS_ORIGINS
+        sync: false

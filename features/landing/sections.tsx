@@ -161,7 +161,7 @@ export function BenefitsSection() {
           <ul className="space-y-4">
             {[
               "Dark-mode enterprise dashboard",
-              "Real FastAPI backend with JWT auth",
+              "Next.js API backend with JWT auth",
               "Threat intelligence & CVE feed",
               "Session & 2FA authentication",
               "Exportable security reports",

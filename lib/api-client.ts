@@ -2,8 +2,7 @@ import axios, { type AxiosError, type AxiosInstance } from "axios";
 import { API_BASE_URL } from "@/lib/constants";
 
 /**
- * Axios client prepared for future FastAPI backend integration.
- * Currently unused by mock services; swap mock calls to this client when ready.
+ * Axios client for CyberGuard API (Next.js /api/v1 routes).
  */
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
