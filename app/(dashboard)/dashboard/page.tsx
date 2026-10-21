@@ -10,6 +10,10 @@ import { ActivityChart } from "@/components/charts/activity-chart";
 import { RiskPieChart } from "@/components/charts/risk-pie-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { BellOff } from "lucide-react";
 import {
   fetchDashboard,
   type DashboardOverview,
@@ -105,9 +109,23 @@ export default function DashboardPage() {
             <CardTitle>Recent Alerts</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {data.recentAlerts.map((alert) => (
-              <AlertCard key={alert.id} alert={alert} />
-            ))}
+            {data.recentAlerts.length === 0 ? (
+              <EmptyState
+                icon={BellOff}
+                title="No alerts yet"
+                description="Run a scan to get started."
+                className="py-10"
+                action={
+                  <Button asChild size="sm" variant="cyan">
+                    <Link href="/website-scanner">Scan a website</Link>
+                  </Button>
+                }
+              />
+            ) : (
+              data.recentAlerts.map((alert) => (
+                <AlertCard key={alert.id} alert={alert} />
+              ))
+            )}
           </CardContent>
         </Card>
 

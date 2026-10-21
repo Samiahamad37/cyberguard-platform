@@ -16,10 +16,21 @@ export type DashboardOverview = {
   timeline: ThreatTimelineEvent[];
   activity: ChartDataPoint[];
   riskDistribution: ChartDataPoint[];
+  counts?: { alerts: number; devices: number };
 };
 
+function viewerTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
 export async function fetchDashboard(): Promise<DashboardOverview> {
-  const { data } = await apiClient.get<DashboardOverview>("/dashboard");
+  const { data } = await apiClient.get<DashboardOverview>("/dashboard", {
+    params: { tz: viewerTimeZone() },
+  });
   return data;
 }
 
@@ -46,6 +57,21 @@ export async function scanDevice(id: string): Promise<Device> {
   return data;
 }
 
+export type DeviceInput = Pick<Device, "name" | "os" | "type" | "ipAddress">;
+
+export async function createDevice(input: DeviceInput): Promise<Device> {
+  const { data } = await apiClient.post<Device>("/devices", input);
+  return data;
+}
+
+export async function updateDevice(
+  id: string,
+  input: Partial<DeviceInput>
+): Promise<Device> {
+  const { data } = await apiClient.patch<Device>(`/devices/${id}`, input);
+  return data;
+}
+
 export async function deleteDevice(id: string): Promise<void> {
   await apiClient.delete(`/devices/${id}`);
 }
@@ -59,6 +85,6 @@ export async function fetchReport(): Promise<{
     report: SecurityReport;
     activity: ChartDataPoint[];
     riskDistribution: ChartDataPoint[];
-  }>("/reports");
+  }>("/reports", { params: { tz: viewerTimeZone() } });
   return data;
 }

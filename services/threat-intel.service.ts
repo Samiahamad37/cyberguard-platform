@@ -13,7 +13,23 @@ export interface ThreatIntelligencePayload {
     product: string;
     description: string;
     published: string;
+    dueDate?: string;
+    ransomware?: boolean;
+    url?: string;
   }[];
+  /** Sections that need an optional API key, mapped to the env var that enables them. */
+  requiresApiKey: { highRiskIPs?: string; malwareFamilies?: string };
+  errors: Record<string, string>;
+  sources: {
+    kev: {
+      name: string;
+      url: string;
+      catalogVersion: string;
+      dateReleased: string;
+      count: number;
+      fetchedAt: string;
+    } | null;
+  };
 }
 
 export async function fetchThreatIntelligence(): Promise<ThreatIntelligencePayload> {

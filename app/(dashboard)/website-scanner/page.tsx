@@ -28,8 +28,8 @@ export default function WebsiteScannerPage() {
       const res = await scanWebsite(url);
       setResult(res);
       toast.success("Website scan complete");
-    } catch {
-      toast.error("Scan failed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Scan failed");
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,7 @@ export default function WebsiteScannerPage() {
     <div>
       <PageHeader
         title="Website Security Scanner"
-        description="Inspect HTTPS, SSL, domain reputation, and known vulnerabilities"
+        description="Live check of HTTPS, TLS certificate, and security headers"
       />
 
       <Card className="mb-6">
@@ -89,24 +89,28 @@ export default function WebsiteScannerPage() {
                 <Progress value={result.overallScore} indicatorClassName="bg-cyan-500" />
               </div>
 
-              <div>
-                <div className="mb-2 flex justify-between text-sm">
-                  <span>Domain Reputation</span>
-                  <span className="font-semibold">
-                    {result.domainReputation}/100
-                  </span>
-                </div>
-                <Progress
-                  value={result.domainReputation}
-                  indicatorClassName="bg-violet-500"
+              <div className="space-y-1 text-sm">
+                <Row
+                  label="HTTP → HTTPS redirect"
+                  value={
+                    result.redirectsToHttps === null
+                      ? "Not checked"
+                      : result.redirectsToHttps
+                        ? "Yes"
+                        : "No"
+                  }
                 />
+                <Row label="Response status" value={result.httpStatus ? String(result.httpStatus) : "—"} />
+                {result.finalUrl !== result.url && (
+                  <Row label="Final URL" value={result.finalUrl} />
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-lg border border-border p-3">
-                  <p className="text-muted-foreground">SSL Grade</p>
+                  <p className="text-muted-foreground">Grade</p>
                   <p className="mt-1 text-xl font-bold text-cyan-400">
-                    {result.sslInfo.grade}
+                    {result.grade}
                   </p>
                 </div>
                 <div className="rounded-lg border border-border p-3">
@@ -126,16 +130,34 @@ export default function WebsiteScannerPage() {
             <CardContent className="space-y-3 text-sm">
               <Row label="Issuer" value={result.sslInfo.issuer} />
               <Row label="Valid From" value={result.sslInfo.validFrom} />
-              <Row label="Valid To" value={result.sslInfo.validTo} />
+              <Row
+                label="Valid To"
+                value={
+                  result.sslInfo.daysRemaining === null
+                    ? result.sslInfo.validTo
+                    : `${result.sslInfo.validTo} (${result.sslInfo.daysRemaining} days)`
+                }
+              />
+              <Row
+                label="Trusted"
+                value={
+                  result.sslInfo.trusted
+                    ? "Yes"
+                    : result.sslInfo.trustError || "No"
+                }
+              />
               <Row label="Subject" value={result.certificateInfo.subject} />
               <Row
-                label="Algorithm"
+                label="Public Key"
                 value={result.certificateInfo.signatureAlgorithm}
               />
               <div>
                 <p className="text-muted-foreground">SAN</p>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {result.certificateInfo.san.map((s) => (
+                  {result.certificateInfo.san.length === 0 && (
+                    <span className="text-xs text-muted-foreground">None</span>
+                  )}
+                  {result.certificateInfo.san.slice(0, 30).map((s) => (
                     <Badge key={s} variant="outline">
                       {s}
                     </Badge>
@@ -147,28 +169,25 @@ export default function WebsiteScannerPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Open Ports (Placeholder)</CardTitle>
+              <CardTitle>Security Headers</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {result.openPorts.map((p) => (
+              {result.securityHeaders.map((h) => (
                 <div
-                  key={p.port}
-                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
+                  key={h.name}
+                  className="rounded-lg border border-border px-3 py-2 text-sm"
                 >
-                  <span>
-                    {p.port}/{p.service}
-                  </span>
-                  <Badge
-                    variant={
-                      p.status === "open"
-                        ? "medium"
-                        : p.status === "filtered"
-                          ? "info"
-                          : "success"
-                    }
-                  >
-                    {p.status}
-                  </Badge>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>{h.name}</span>
+                    <Badge variant={h.present ? "success" : "medium"}>
+                      {h.present ? "present" : "missing"}
+                    </Badge>
+                  </div>
+                  {h.value && (
+                    <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
+                      {h.value}
+                    </p>
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -176,17 +195,22 @@ export default function WebsiteScannerPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Vulnerabilities & Recommendations</CardTitle>
+              <CardTitle>Findings & Recommendations</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {result.knownVulnerabilities.map((v) => (
+              {result.findings.length === 0 && (
+                <p className="text-sm text-emerald-400">
+                  No issues found in the checks performed.
+                </p>
+              )}
+              {result.findings.map((v) => (
                 <div
-                  key={v.cve}
+                  key={v.id}
                   className="rounded-lg border border-border p-3"
                 >
                   <div className="flex items-center gap-2">
                     <RiskBadge level={v.severity} />
-                    <span className="font-mono text-sm">{v.cve}</span>
+                    <span className="text-sm font-medium">{v.title}</span>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
                     {v.description}

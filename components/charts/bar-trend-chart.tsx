@@ -19,6 +19,13 @@ export function BarTrendChart({
   data,
   color = "#a78bfa",
 }: BarTrendChartProps) {
+  if (data.length === 0) {
+    return (
+      <div className="flex h-64 w-full items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+        No data available
+      </div>
+    );
+  }
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">

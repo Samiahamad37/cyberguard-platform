@@ -35,8 +35,8 @@ export default function PhishingPage() {
       const res = await analyzePhishingEmail(emailContent);
       setResult(res);
       toast.success("Phishing analysis complete");
-    } catch {
-      toast.error("Analysis failed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Analysis failed");
     } finally {
       setLoading(false);
     }
@@ -51,9 +51,9 @@ export default function PhishingPage() {
     try {
       const res = await analyzePhishingUrl(url);
       setResult(res);
-      toast.success("URL reputation analysis complete");
-    } catch {
-      toast.error("Analysis failed");
+      toast.success("URL analysis complete");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Analysis failed");
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function PhishingPage() {
     <div>
       <PageHeader
         title="Phishing Detection"
-        description="Analyze emails, .eml files, URLs, and screenshots with AI"
+        description="Heuristic analysis of emails, .eml files, and URLs"
       />
 
       <div className="grid gap-6 xl:grid-cols-2">
@@ -82,9 +82,6 @@ export default function PhishingPage() {
                 </TabsTrigger>
                 <TabsTrigger value="url" className="flex-1">
                   URL
-                </TabsTrigger>
-                <TabsTrigger value="screenshot" className="flex-1">
-                  Screenshot
                 </TabsTrigger>
               </TabsList>
 
@@ -139,40 +136,17 @@ export default function PhishingPage() {
                   disabled={loading}
                 >
                   {loading && <Loader2 className="animate-spin" />}
-                  Check URL Reputation
+                  Analyze URL
                 </Button>
               </TabsContent>
 
-              <TabsContent value="screenshot" className="space-y-4">
-                <FileUpload
-                  accept="image/*"
-                  label="Upload screenshot"
-                  description="PNG, JPG, or WEBP"
-                  onFileSelect={(file) => {
-                    if (file) {
-                      setEmailContent(
-                        `Screenshot analysis: ${file.name}. Suspected phishing login page with urgent verify account messaging.`
-                      );
-                      toast.info("Screenshot queued — running AI visual heuristics");
-                    }
-                  }}
-                />
-                <Button
-                  variant="gradient"
-                  onClick={runEmailAnalysis}
-                  disabled={loading || !emailContent}
-                >
-                  {loading && <Loader2 className="animate-spin" />}
-                  Analyze Screenshot
-                </Button>
-              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>AI Analysis Results</CardTitle>
+            <CardTitle>Analysis Results</CardTitle>
           </CardHeader>
           <CardContent>
             {!result ? (
@@ -182,7 +156,14 @@ export default function PhishingPage() {
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <RiskBadge level={result.riskLevel} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <RiskBadge level={result.riskLevel} />
+                    <Badge variant="outline">
+                      {result.analysisMethod === "heuristic"
+                        ? "Heuristic analysis"
+                        : `Heuristic + ${result.sources.filter((s) => s !== "Heuristic analysis").join(", ")}`}
+                    </Badge>
+                  </div>
                   <Badge variant={result.fakeDomainDetected ? "critical" : "success"}>
                     {result.fakeDomainDetected
                       ? "Fake domain detected"
@@ -202,27 +183,18 @@ export default function PhishingPage() {
                 </div>
 
                 <div>
-                  <div className="mb-2 flex justify-between text-sm">
-                    <span>Phishing Probability</span>
-                    <span className="font-semibold">
-                      {result.phishingProbability}%
-                    </span>
-                  </div>
-                  <Progress
-                    value={result.phishingProbability}
-                    indicatorClassName="bg-cyan-500"
-                  />
-                </div>
-
-                <div>
-                  <h4 className="mb-2 text-sm font-medium">Suspicious Keywords</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {result.suspiciousKeywords.map((kw) => (
-                      <Badge key={kw} variant="secondary">
-                        {kw}
-                      </Badge>
-                    ))}
-                  </div>
+                  <h4 className="mb-2 text-sm font-medium">Signals Found</h4>
+                  {result.signals.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No phishing signals found.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {result.signals.map((kw) => (
+                        <Badge key={kw} variant="secondary">
+                          {kw}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {result.urlReputation.length > 0 && (
@@ -231,7 +203,7 @@ export default function PhishingPage() {
                     <div className="space-y-2">
                       {result.urlReputation.map((u) => (
                         <div
-                          key={u.url}
+                          key={`${u.source}-${u.url}`}
                           className="rounded-lg border border-border bg-muted/30 p-3 text-sm"
                         >
                           <p className="truncate font-mono text-xs">{u.url}</p>
@@ -242,12 +214,17 @@ export default function PhishingPage() {
                                   ? "critical"
                                   : u.status === "suspicious"
                                     ? "medium"
-                                    : "success"
+                                    : u.status === "unknown"
+                                      ? "outline"
+                                      : "success"
                               }
                             >
                               {u.status}
                             </Badge>
-                            <span>Score: {u.score}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {u.source}
+                              {u.detail ? ` · ${u.detail}` : ""}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -256,7 +233,7 @@ export default function PhishingPage() {
                 )}
 
                 <div>
-                  <h4 className="mb-2 text-sm font-medium">AI Explanation</h4>
+                  <h4 className="mb-2 text-sm font-medium">Explanation</h4>
                   <p className="text-sm text-muted-foreground">
                     {result.aiExplanation}
                   </p>

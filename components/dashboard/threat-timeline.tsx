@@ -10,6 +10,16 @@ interface ThreatTimelineProps {
 }
 
 export function ThreatTimeline({ events }: ThreatTimelineProps) {
+  if (events.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border px-4 py-10 text-center">
+        <p className="font-medium">Nothing on your timeline yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Scans, alerts and device changes will appear here as they happen.
+        </p>
+      </div>
+    );
+  }
   return (
     <ol className="relative space-y-0 border-l border-border ml-3">
       {events.map((event, index) => (

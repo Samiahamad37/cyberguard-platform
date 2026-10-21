@@ -19,6 +19,7 @@ const SUGGESTIONS = [
   "Explain this vulnerability",
   "What should I do after a phishing attack?",
   "Analyze this security alert",
+  "Summarise my alerts",
 ];
 
 const welcome: ChatMessage = {
@@ -75,7 +76,7 @@ export function AIChatWindow() {
         </div>
         <div>
           <p className="font-semibold">AI Security Assistant</p>
-          <p className="text-xs text-emerald-400">Online · Mock LLM mode</p>
+          <p className="text-xs text-emerald-400">Built-in knowledge base · summarises your own alerts &amp; devices</p>
         </div>
       </div>
 

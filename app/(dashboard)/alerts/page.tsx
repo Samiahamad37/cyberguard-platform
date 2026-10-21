@@ -28,6 +28,7 @@ import { formatDate } from "@/lib/utils";
 import { RiskBadge } from "@/components/shared/risk-badge";
 import { fetchAlerts, updateAlert } from "@/services/platform.service";
 import { toast } from "sonner";
+import Link from "next/link";
 
 const RISK_FILTERS: Array<RiskLevel | "all"> = [
   "all",
@@ -199,7 +200,18 @@ export default function AlertsPage() {
         </Button>
       </div>
 
-      {filtered.length === 0 ? (
+      {alerts.length === 0 ? (
+        <EmptyState
+          icon={BellOff}
+          title="No alerts yet"
+          description="Run a scan to get started. Website, phishing, malware and device scans that find high-risk issues create alerts here."
+          action={
+            <Button asChild variant="cyan">
+              <Link href="/website-scanner">Scan a website</Link>
+            </Button>
+          }
+        />
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={BellOff}
           title="No alerts match your filters"

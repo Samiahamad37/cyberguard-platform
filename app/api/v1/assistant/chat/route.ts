@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (isErrorResponse(user)) return user;
   try {
     const body = schema.parse(await request.json());
-    return NextResponse.json(assistantReply(body.content));
+    return NextResponse.json(await assistantReply(body.content, user.id));
   } catch {
     return jsonError("Message is required", 400);
   }

@@ -36,13 +36,28 @@ export interface Alert {
   source: string;
   timestamp: string;
   category: string;
+  resolvedAt?: string;
+}
+
+export interface DeviceScanResult {
+  target: string;
+  resolvedAddress?: string;
+  reachable: boolean;
+  checkedPorts: number[];
+  openPorts: { port: number; service: string; risky: boolean }[];
+  riskLevel: RiskLevel;
+  scannedAt: string;
+  durationMs: number;
+  error?: string;
 }
 
 export interface Device {
   id: string;
   name: string;
   os: string;
+  /** ISO timestamp of the last scan, or "" if never scanned. */
   lastScan: string;
+  lastScanResult?: DeviceScanResult;
   status: DeviceStatus;
   riskLevel: RiskLevel;
   ipAddress: string;
@@ -65,51 +80,91 @@ export interface ChartDataPoint {
   resolved?: number;
 }
 
+/** How a scan result was produced. "heuristic" = local rules only, no external lookups. */
+export type AnalysisMethod = "heuristic" | "heuristic+threat-intel";
+
 export interface PhishingAnalysisResult {
   threatScore: number;
   phishingProbability: number;
   suspiciousKeywords: string[];
   fakeDomainDetected: boolean;
   fakeDomains: string[];
+  /** Only filled from real reputation sources (Google Safe Browsing / VirusTotal). */
   urlReputation: {
     url: string;
-    score: number;
-    status: "safe" | "suspicious" | "malicious";
+    source: string;
+    status: "safe" | "suspicious" | "malicious" | "unknown";
+    detail?: string;
   }[];
+  /** Heuristic signals that contributed to the score. */
+  signals: string[];
   aiExplanation: string;
   recommendedActions: string[];
   riskLevel: RiskLevel;
+  analysisMethod: AnalysisMethod;
+  sources: string[];
 }
 
 export interface MalwareScanResult {
   malwareRisk: number;
   fileReputation: "trusted" | "unknown" | "suspicious" | "malicious";
   virusDetected: boolean;
+  /** Real antivirus engine verdicts (VirusTotal). Empty for heuristic-only analysis. */
   detections: { engine: string; result: string }[];
+  engineStats?: { malicious: number; suspicious: number; harmless: number; undetected: number };
+  signals: string[];
   aiAnalysis: string;
   threatCategory: string;
   riskLevel: RiskLevel;
   hash?: string;
   fileName?: string;
+  analysisMethod: AnalysisMethod;
+  sources: string[];
+  /** Set when a lookup could not run because an optional API key is missing. */
+  requiresApiKey?: string;
+}
+
+export interface SecurityHeaderCheck {
+  name: string;
+  present: boolean;
+  value?: string;
+}
+
+export interface WebsiteFinding {
+  id: string;
+  title: string;
+  severity: RiskLevel;
+  description: string;
 }
 
 export interface WebsiteScanResult {
   url: string;
+  finalUrl: string;
+  httpStatus: number | null;
+  scannedAt: string;
   httpsStatus: boolean;
+  redirectsToHttps: boolean | null;
   sslInfo: {
     issuer: string;
     validFrom: string;
     validTo: string;
+    daysRemaining: number | null;
+    trusted: boolean;
+    trustError?: string;
     grade: string;
     protocol: string;
   };
-  domainReputation: number;
   certificateInfo: {
     subject: string;
     san: string[];
+    /** Public key algorithm and size, e.g. "EC prime256v1" or "RSA 2048-bit". */
     signatureAlgorithm: string;
   };
+  securityHeaders: SecurityHeaderCheck[];
+  findings: WebsiteFinding[];
+  /** Not scanned (empty). Kept for API compatibility. */
   openPorts: { port: number; service: string; status: string }[];
+  /** Not scanned (empty). Kept for API compatibility. */
   knownVulnerabilities: {
     cve: string;
     severity: RiskLevel;
@@ -117,17 +172,19 @@ export interface WebsiteScanResult {
   }[];
   securityRecommendations: string[];
   overallScore: number;
+  grade: string;
 }
 
 export interface ThreatIntelItem {
   id: string;
   name: string;
-  type: "malware" | "ransomware" | "apt" | "phishing" | "botnet";
+  type: "malware" | "ransomware" | "apt" | "phishing" | "botnet" | "vulnerability";
   severity: RiskLevel;
   description: string;
   firstSeen: string;
   lastSeen: string;
   countries?: string[];
+  url?: string;
 }
 
 export interface HighRiskIP {

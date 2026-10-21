@@ -14,13 +14,14 @@ export async function PATCH(
   const user = await requireUser(request);
   if (isErrorResponse(user)) return user;
 
+  const { id } = await context.params;
+  let body: z.infer<typeof schema>;
   try {
-    const { id } = await context.params;
-    const body = schema.parse(await request.json());
-    const updated = await updateAlertStatus(id, body.status);
-    if (!updated) return jsonError("Alert not found", 404);
-    return NextResponse.json(updated);
+    body = schema.parse(await request.json());
   } catch {
     return jsonError("Invalid status", 400);
   }
+  const updated = await updateAlertStatus(user.id, id, body.status);
+  if (!updated) return jsonError("Alert not found", 404);
+  return NextResponse.json(updated);
 }
