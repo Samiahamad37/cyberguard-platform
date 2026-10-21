@@ -25,5 +25,5 @@ API lives at `/api/v1/...` on the same origin.
 
 ## Notes
 
-- User accounts are stored in `data/users.json` locally, and `/tmp/cyberguard-users.json` on Vercel (ephemeral on free serverless — for demos). For durable production users later, plug in Postgres/Neon.
+- **User accounts need a database on Vercel.** Set `DATABASE_URL` to a Postgres (Neon) connection string in Vercel → Settings → Environment Variables, then redeploy. The `cyberguard_users` table is created automatically on first use. Without `DATABASE_URL`, users fall back to `data/users.json` locally and `/tmp/cyberguard-users.json` on Vercel, which is wiped between serverless instances (logins then fail with "User not found").
 - The old `backend/` FastAPI folder is optional/legacy and not required for Vercel.
